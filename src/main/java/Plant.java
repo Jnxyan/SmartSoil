@@ -6,10 +6,11 @@ public class Plant {
     //seven data
 
     //2. constructor
-    public Plant(int n, int p, int k){
+    public Plant(int n, int p, int k /* need add */){
         this.n = n; //this (n) = above de private int n
         this.p = p;
         this.k = k;
+        //another data
     }
 
     //3. getter and setter
