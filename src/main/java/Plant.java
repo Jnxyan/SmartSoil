@@ -8,5 +8,16 @@ public class Plant {
     //2. constructor
     public Plant(int n, int p, int k){
         this.n = n; //this (n) = above de private int n
+        this.p = p;
+        this.k = k;
+    }
+
+    //3. getter and setter
+    //getter
+    public  int getN() {
+        return n;
+    }
+    public void setN(int n) {
+        this.n = n;
     }
 }
