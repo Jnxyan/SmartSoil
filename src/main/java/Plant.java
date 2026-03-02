@@ -15,6 +15,7 @@ public class Plant {
     //3. getter and setter
     //getter
     public  int getN() {
+        System.out.print(n);
         return n;
     }
     public void setN(int n) {
