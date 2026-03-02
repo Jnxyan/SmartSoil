@@ -1,24 +1,50 @@
 public class Plant {
-    //1. data field
-    private int n;
-    private int p;
-    private int k;
-    //seven data
+    //Data field
+    String name;
+    int minN, maxN;
+    int minP, maxP;
+    int minK, maxK;
+    double minPH, maxPH;
+    int minEC, maxEC;
+    double minTemp, maxTemp;
+    double minHumidity, maxHumidity;
 
-    //2. constructor
-    public Plant(int n, int p, int k /* need add */){
-        this.n = n; //this (n) = above de private int n
-        this.p = p;
-        this.k = k;
-        //another data
+    //Constructor
+    public Plant(String name, int minN, int maxN, int minP, int maxP,
+                 int minK, int maxK, double minPH, double maxPH,
+                 int minEC, int maxEC, double minTemp, double maxTemp,
+                 double minHumidity, double maxHumidity) {
+
+        this.name = name;
+        this.minN = minN;
+        this.maxN = maxN;
+        this.minP = minP;
+        this.maxP = maxP;
+        this.minK = minK;
+        this.maxK = maxK;
+        this.minPH = minPH;
+        this.maxPH = maxPH;
+        this.minEC = minEC;
+        this.maxEC = maxEC;
+        this.minTemp = minTemp;
+        this.maxTemp = maxTemp;
+        this.minHumidity = minHumidity;
+        this.maxHumidity = maxHumidity;
     }
 
-    //3. getter and setter
-    //getter
-    public  int getN() {
-        return n;
+    public boolean isSuitable(int n, int p, int k, double ph,
+                              int ec, double temp, double humidity) {
+        return n >= minN && n <= maxN
+                && p >= minP && p <= maxP
+                && k >= minK && k <= maxK
+                && ph >= minPH && ph <= maxPH
+                && ec >= minEC && ec <= maxEC
+                && temp >= minTemp && temp <= maxTemp
+                && humidity >= minHumidity && humidity <= maxHumidity;
     }
-    public void setN(int n) {
-        this.n = n;
+
+    //Getter
+    public String getName() {
+        return name;
     }
 }
