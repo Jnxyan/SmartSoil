@@ -15,15 +15,15 @@ public class MainApp {
 
         Scanner scanner = new Scanner(System.in);
         System.out.print("Enter Nitrogen (N): ");
-        int n = scanner.nextInt();
+        double n = scanner.nextDouble();
         System.out.print("Enter Phosphorus (P): ");
-        int p = scanner.nextInt();
+        double p = scanner.nextDouble();
         System.out.print("Enter Potassium (K): ");
-        int k = scanner.nextInt();
+        double k = scanner.nextDouble();
         System.out.print("Enter pH: ");
         double ph = scanner.nextDouble();
         System.out.print("Enter EC (us/cm): ");
-        int ec = scanner.nextInt();
+        double ec = scanner.nextDouble();
         System.out.print("Enter Temperature (°C): ");
         double temp = scanner.nextDouble();
         System.out.print("Enter Humidity (%): ");
@@ -42,5 +42,11 @@ public class MainApp {
         if (!found) {
             System.out.println("No suitable crops for these soil conditions.");
         }
+
+        CheckChiliSoilHealth.ChiliSoil chiliData = new CheckChiliSoilHealth.ChiliSoil(n, p, k, ph, ec, temp, humidity);
+        CheckChiliSoilHealth.ChiliSoil.AnalysisResult result = CheckChiliSoilHealth.ChiliSoil.AnalysisResult.analyszeChiliSoil(chiliData);
+        System.out.println("CHILI HEALTH ANALYSIS");
+        result.printResult();
+
     }
 }
