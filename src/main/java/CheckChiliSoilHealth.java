@@ -91,6 +91,7 @@ public class CheckChiliSoilHealth {
                     result.actionableAdvice.add("Stop nitrogen fertilizers to prevent delayed fruiting.");
                 }
 
+                //weather api not yet dont from here
                 if(chiliData.p < 40){
                     result.warnings.add("Low Phosphorus (P)");
                     result.actionableAdvice.add("Add bone meal or phosphate fertilizer to support roots.");
