@@ -15,6 +15,41 @@ public class CheckChiliSoilHealth {
             this.humidity = humidity;
         }
 
+        public static String getUpcomingWeather(){
+            try{
+                //use weatherAPI, apikey under xinyan acc
+                String apikey = "66b97819390a4bfbab465414260403";
+                String location = "Butterworth";
+
+                java.net.URL url = new java.net.URL("https:// weatherapi.com/v1/forecast/json?key=" + apikey
+                + "&q=" + location + "&days=3");
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.connect();
+
+                if(conn.getResponseCode() != 200){
+                    return "Unknown";
+                }
+
+                java.util.Scanner apiScanner = new java.util.Scanner(url.openStream());
+                StringBuilder response = new StringBuilder();
+                while (apiScanner.hasNext()){
+                    response.append(apiScanner.nextLine());
+                }
+                apiScanner.close();
+
+                String jsonString = response.toString().toLowerCase();
+
+                if(jsonString.contains("rain") || jsonString.contains("storm") || jsonString.contains("drizzle")){
+                    return "Rain";
+                } else if (jsonString.contains("sunny") || jsonString.contains("clear")) {
+                    return "Sunny";
+                }
+                return "Cloudy";
+            }catch(Exception e){
+                System.out.println("Weather API connection failed. Defaulting to Unknown.");
+                return "Unknown";
+            }
+        }
         public static class AnalysisResult{
             String crop = "Chili";
             String overallStatus = "Healthy";
@@ -40,9 +75,17 @@ public class CheckChiliSoilHealth {
             public static AnalysisResult analyszeChiliSoil(ChiliSoil chiliData){
                 AnalysisResult result = new AnalysisResult();
 
+                String futureWeather = getUpcomingWeather();
+
                 if(chiliData.n < 80){
                     result.warnings.add("Low Nitrogen (N)");
-                    result.actionableAdvice.add("Apply Urea or chicken manure to boost leaf growth.");
+                    if(futureWeather.equals("Rain")){
+                        result.actionableAdvice.add("DO NOT fertilize today! " +
+                                "\nRain is expected, which will wash away the chemicals into rivers.\n" +
+                                "Wait until it clears.");
+                    }else {
+                        result.actionableAdvice.add("Apply Urea or chicken manure to boost leaf growth.");
+                    }
                 }else if(chiliData.n > 120){
                     result.warnings.add("High Nitrogen (N)");
                     result.actionableAdvice.add("Stop nitrogen fertilizers to prevent delayed fruiting.");
@@ -84,7 +127,13 @@ public class CheckChiliSoilHealth {
 
                 if (chiliData.humidity < 60) {
                     result.warnings.add("Low Soil Moisture");
-                    result.actionableAdvice.add("Turn on irrigation system. Soil is too dry for Chili.");
+                    if(futureWeather.equals("Rain")){
+                        result.actionableAdvice.add("DO NOT WATER TODAY. " +
+                                "\nSave water & electricity! Heavy rain is expected in Butterworth soon." +
+                                "\nLet nature irrigate it.");
+                    }else{
+                        result.actionableAdvice.add("Turn on irrigation system. Soil is too dry for Chili.");
+                    }
                 } else if (chiliData.humidity > 80) {
                     result.warnings.add("Waterlogged Soil");
                     result.actionableAdvice.add("Stop watering and improve drainage to prevent root rot.");
