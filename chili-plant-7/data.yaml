@@ -1,0 +1,12 @@
+names:
+- yellowish leaf
+nc: 1
+roboflow:
+  license: CC BY 4.0
+  project: chili-plant-zr1ck
+  url: https://universe.roboflow.com/xinhuis-workspace/chili-plant-zr1ck/dataset/7
+  version: 7
+  workspace: xinhuis-workspace
+test: ../test/images
+train: ../train/images
+val: ../valid/images
