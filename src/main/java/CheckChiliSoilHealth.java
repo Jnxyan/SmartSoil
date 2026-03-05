@@ -17,12 +17,11 @@ public class CheckChiliSoilHealth {
 
         public static String getUpcomingWeather(){
             try{
-                //use weatherAPI, apikey under xinyan acc
                 String apikey = "66b97819390a4bfbab465414260403";
                 String location = "Butterworth";
 
-                java.net.URL url = new java.net.URL("https:// weatherapi.com/v1/forecast/json?key=" + apikey
-                + "&q=" + location + "&days=3");
+                java.net.URL url = new java.net.URL("http://api.weatherapi.com/v1/forecast.json?key=" + apikey
+                        + "&q=" + location + "&days=3");
                 java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
                 conn.connect();
 
@@ -77,6 +76,7 @@ public class CheckChiliSoilHealth {
 
                 String futureWeather = getUpcomingWeather();
 
+                //check nitrogen (N)
                 if(chiliData.n < 80){
                     result.warnings.add("Low Nitrogen (N)");
                     if(futureWeather.equals("Rain")){
@@ -91,25 +91,40 @@ public class CheckChiliSoilHealth {
                     result.actionableAdvice.add("Stop nitrogen fertilizers to prevent delayed fruiting.");
                 }
 
-                //weather api not yet dont from here
+                //phosphorus (P)
                 if(chiliData.p < 40){
                     result.warnings.add("Low Phosphorus (P)");
                     result.actionableAdvice.add("Add bone meal or phosphate fertilizer to support roots.");
                 }else if(chiliData.p > 60){
                     result.warnings.add("High Phosphorus (P)");
-                    result.actionableAdvice.add("Stop using Phosphorus rich fertilisers." +
-                            "Flush soil with water and apply Iron/Zinc supplements if leaves turn yellow");
+                    if(futureWeather.equals("Rain")){
+                        result.actionableAdvice.add("Stop using Phosphorus rich fertilisers." +
+                                "\nRain is expected soon, let nature naturally flush the excess P from the soil!" +
+                                "\nApply Iron/Zinc if leaves turn yellow");
+                    }else {
+                        result.actionableAdvice.add("Stop using Phosphorus rich fertilisers." +
+                                "\nWeather is dry, so please manually flush soil with fresh water." +
+                                "\nApply Iron/Zinc if leaves turn yellow");
+                    }
                 }
 
+                //Potassium (K)
                 if(chiliData.k < 150){
                     result.warnings.add("Low Potassium (K)");
                     result.actionableAdvice.add("Apply potassium sulfate to improve fruit quality.");
-                } else if (chiliData.p > 250) {
+                } else if (chiliData.k > 250) {
                     result.warnings.add("High Potassium (K)");
-                    result.actionableAdvice.add("Stop Potassium fertilizers. Excess K blocks Calcium and Magnesium." +
-                            "Apply Cal-Mag supplements and flush soil.");
+                    if(futureWeather.equals("Rain")){
+                        result.actionableAdvice.add("Stop Potassium fertilizers. Excess K blocks Calcium and Magnesium." +
+                                "Let upcoming rain flush the soil naturally." +
+                                "Apply Cal-Mag supplements.");
+                    }else{
+                        result.actionableAdvice.add("stop Potassium fertilizers. Excess K blocks Calcium and Magnesium." +
+                                "Manually flush soil with fresh water. Apply Cal-Mag supplements.");
+                    }
                 }
 
+                //pH
                 if (chiliData.ph < 5.8) {
                     result.warnings.add("Acidic Soil (pH " + chiliData.ph + ")");
                     result.actionableAdvice.add("Apply agricultural lime to neutralize acidity.");
@@ -118,14 +133,23 @@ public class CheckChiliSoilHealth {
                     result.actionableAdvice.add("Add organic compost to lower pH.");
                 }
 
+                //ec
                 if (chiliData.ec < 1200) {
                     result.warnings.add("Low EC (Poor Nutrient Availability)");
                     result.actionableAdvice.add("Nutrients are washed out. Apply a balanced NPK fertilizer.");
                 } else if (chiliData.ec > 2200) {
                     result.warnings.add("High EC (Salt Toxicity Risk)");
+                    if(futureWeather.equals("Rain")){
+                        result.actionableAdvice.add("Fertilizer overload! High salt toxicity risk." +
+                                "\nRain is expected, which will help flush the salts. drainage.");
+                    }else{
+                        result.actionableAdvice.add("Fertilizer overload! High salt toxicity risk." +
+                                "Manually flush soil with fresh water immediately to remove excess salts.");
+                    }
                     result.actionableAdvice.add("Fertilizer overload! Flush the soil with fresh water immediately.");
                 }
 
+                //humidity
                 if (chiliData.humidity < 60) {
                     result.warnings.add("Low Soil Moisture");
                     if(futureWeather.equals("Rain")){
@@ -140,6 +164,7 @@ public class CheckChiliSoilHealth {
                     result.actionableAdvice.add("Stop watering and improve drainage to prevent root rot.");
                 }
 
+                //temperature
                 if (chiliData.temp > 32) {
                     result.warnings.add("High Soil Temperature");
                     result.actionableAdvice.add("Apply organic mulch to the soil surface to cool the roots.");
