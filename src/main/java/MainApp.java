@@ -48,5 +48,6 @@ public class MainApp {
         System.out.println("CHILI HEALTH ANALYSIS");
         result.printResult();
 
+        scanner.close();
     }
 }
