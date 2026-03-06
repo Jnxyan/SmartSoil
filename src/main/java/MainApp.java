@@ -25,7 +25,7 @@ public class MainApp {
         System.out.print("Enter Humidity (%): ");
         double humidity = scanner.nextDouble();
 
-        System.out.println("Suitable crops:");
+        System.out.println("Suitable plants:");
 
         boolean found = false;
         for (Plant plant : plants) {
@@ -36,7 +36,7 @@ public class MainApp {
         }
 
         if (!found) {
-            System.out.println("No suitable crops for these soil conditions.");
+            System.out.println("No suitable plants for these soil conditions.");
         }
 
         CheckChiliSoilHealth.ChiliSoil chiliData = new CheckChiliSoilHealth.ChiliSoil(n, p, k, ph, ec, temp, humidity);
