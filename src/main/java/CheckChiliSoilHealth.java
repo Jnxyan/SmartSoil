@@ -55,6 +55,7 @@ public class CheckChiliSoilHealth {
             List<String> warnings = new ArrayList<>();
             List<String> actionableAdvice = new ArrayList<>();
             String predictiveAlert = "";
+            int soilHealthScore = 100;
 
             public void printResult(){
                 System.out.println("Crop: " + crop);
@@ -69,6 +70,7 @@ public class CheckChiliSoilHealth {
                     }
                 }
                 System.out.println("PredictiveAlert: " +  predictiveAlert);
+                System.out.println("Soil health Score: " + soilHealthScore + "/100");
             }
 
             public static AnalysisResult analyszeChiliSoil(ChiliSoil chiliData){
@@ -159,6 +161,11 @@ public class CheckChiliSoilHealth {
                     }else{
                         result.actionableAdvice.add("Turn on irrigation system. Soil is too dry for Chili.");
                     }
+
+                    //Smart irrigation recommendation
+                    if(chiliData.humidity < 50 && futureWeather.equals("Sunny")){
+                        result.actionableAdvice.add("Increase irrigation frequency because hot weather will dry the soil faster.");
+                    }
                 } else if (chiliData.humidity > 80) {
                     result.warnings.add("Waterlogged Soil");
                     result.actionableAdvice.add("Stop watering and improve drainage to prevent root rot.");
@@ -177,6 +184,12 @@ public class CheckChiliSoilHealth {
                 if(!result.warnings.isEmpty()){
                     result.overallStatus = "Attention Needed";
 
+                    //Disease risk detection
+                    if(chiliData.humidity > 85 && chiliData.temp > 31){
+                        result.warnings.add("High Disease risk Environment");
+                        result.actionableAdvice.add("Hot and humid conditions detected. Monitor plants closely for fungal infection.");
+                    }
+
                     // Predictive feature based on humidity and temp
                     if (chiliData.humidity > 80 && chiliData.temp > 30) {
                         result.predictiveAlert = "High risk of fungal disease (e.g., Anthracnose) in the next 48 hours due to hot and wet conditions. Prepare fungicide.";
@@ -185,6 +198,12 @@ public class CheckChiliSoilHealth {
                     }
                 } else {
                     result.predictiveAlert = "Optimal conditions! Expected harvest is on track for maximum yield.";
+                }
+
+                result.soilHealthScore = 100 - (result.warnings.size() * 10);
+
+                if(result.soilHealthScore < 0){
+                    result.soilHealthScore = 0;
                 }
 
                 return result;
