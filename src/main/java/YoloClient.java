@@ -1,108 +1,117 @@
-import com.github.sarxos.webcam.Webcam;
-import com.github.sarxos.webcam.WebcamPanel;
-import com.github.sarxos.webcam.WebcamResolution;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.io.ByteArrayOutputStream;
-import javax.imageio.ImageIO;
 
 public class YoloClient {
 
-    private static JSONArray latestDetections = new JSONArray();
+    private static BufferedImage currentImage = null;
+    private static JPanel imagePanel;
+    private static JLabel statusLabel = new JLabel("Status: Waiting for Image...");
+    private static JLabel detailLabel = new JLabel("Detections: None");
 
-    public static void main(String[] args) throws Exception {
-        Webcam webcam = Webcam.getDefault();
-        Dimension vgaSize = WebcamResolution.VGA.getSize(); // 640x480
-        webcam.setViewSize(vgaSize);
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("SmartSoil: Chili Health Scanner");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
 
-        WebcamPanel panel = new WebcamPanel(webcam) {
+        // 1. Top Panel: Navigation
+        JButton uploadBtn = new JButton("UPLOAD & SCAN PLANT");
+        uploadBtn.setFont(new Font("Arial", Font.BOLD, 14));
+        uploadBtn.setBackground(new Color(34, 139, 34)); // Forest Green
+        uploadBtn.setForeground(Color.WHITE);
+        frame.add(uploadBtn, BorderLayout.NORTH);
+
+        // 2. Middle Panel: Image Display
+        imagePanel = new JPanel() {
             @Override
-            public void paintComponent(Graphics g) {
+            protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g;
-
-                // --- ACCURACY CORRECTION: SCALING ---
-                // Calculate scale if the window size differs from 640x480
-                double scaleX = (double) getWidth() / vgaSize.width;
-                double scaleY = (double) getHeight() / vgaSize.height;
-
-                g2.setStroke(new BasicStroke(3));
-                g2.setColor(Color.RED);
-                g2.setFont(new Font("Arial", Font.BOLD, 16));
-
-                synchronized (latestDetections) {
-                    for (int i = 0; i < latestDetections.length(); i++) {
-                        JSONObject det = latestDetections.getJSONObject(i);
-
-                        // Scale the coordinates to match the current window size
-                        int w = (int) (det.getInt("width") * scaleX);
-                        int h = (int) (det.getInt("height") * scaleY);
-                        int x = (int) ((det.getInt("x") * scaleX) - (w / 2));
-                        int y = (int) ((det.getInt("y") * scaleY) - (h / 2));
-
-                        String label = det.getString("class") + " (" + (int)(det.getDouble("confidence") * 100) + "%)";
-
-                        g2.drawRect(x, y, w, h);
-                        g2.drawString(label, x, y - 10);
-                    }
+                if (currentImage != null) {
+                    g.drawImage(currentImage, 0, 0, getWidth(), getHeight(), null);
                 }
             }
         };
+        imagePanel.setPreferredSize(new Dimension(600, 450));
+        imagePanel.setBackground(Color.DARK_GRAY);
+        frame.add(imagePanel, BorderLayout.CENTER);
 
-        panel.setFPSDisplayed(true);
-        panel.setFillArea(true); // Ensures the image fills the panel
+        // 3. Bottom Panel: Results Dashboard
+        JPanel resultsPanel = new JPanel(new GridLayout(2, 1));
+        resultsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JFrame window = new JFrame("Chili Plant Detector");
-        window.add(panel);
-        window.pack();
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.setVisible(true);
+        statusLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        detailLabel.setFont(new Font("Arial", Font.ITALIC, 14));
 
-        HttpClient client = HttpClient.newHttpClient();
+        resultsPanel.add(statusLabel);
+        resultsPanel.add(detailLabel);
+        frame.add(resultsPanel, BorderLayout.SOUTH);
 
-        while (true) {
-            BufferedImage image = webcam.getImage();
-            if (image != null) {
-                byte[] imageBytes = toByteArray(image);
-
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8001/predict"))
-                        .header("Content-Type", "application/octet-stream")
-                        .POST(HttpRequest.BodyPublishers.ofByteArray(imageBytes))
-                        .build();
-
-                client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                        .thenApply(HttpResponse::body)
-                        .thenAccept(result -> {
-                            // --- ADDED YOUR PRINT LINE HERE ---
-                            System.out.println("AI Result: " + result);
-
-                            try {
-                                JSONObject json = new JSONObject(result);
-                                synchronized (latestDetections) {
-                                    latestDetections = json.getJSONArray("predictions");
-                                }
-                                panel.repaint();
-                            } catch (Exception e) {
-                                // Silent fail if JSON is malformed or empty
-                            }
-                        });
+        // Upload Logic
+        uploadBtn.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                try {
+                    currentImage = ImageIO.read(file);
+                    statusLabel.setText("Status: SCANNING...");
+                    statusLabel.setForeground(Color.BLUE);
+                    imagePanel.repaint();
+                    scanImage(currentImage);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
-            Thread.sleep(400); // Slight delay for stability
-        }
+        });
+
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
 
-    private static byte[] toByteArray(BufferedImage img) throws Exception {
+    private static void scanImage(BufferedImage img) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(img, "jpg", baos);
-        return baos.toByteArray();
+        byte[] bytes = baos.toByteArray();
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8001/predict"))
+                .header("Content-Type", "application/octet-stream")
+                .POST(HttpRequest.BodyPublishers.ofByteArray(bytes))
+                .build();
+
+        client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenAccept(result -> {
+                    // This still prints to console so you can see the raw data
+                    System.out.println("AI Result: " + result);
+
+                    JSONObject json = new JSONObject(result);
+                    JSONArray predictions = json.getJSONArray("predictions");
+                    int count = predictions.length();
+
+                    // Update UI based on logic
+                    SwingUtilities.invokeLater(() -> {
+                        if (count == 0) {
+                            statusLabel.setText("Status: HEALTHY");
+                            statusLabel.setForeground(new Color(0, 128, 0)); // Dark Green
+                            detailLabel.setText("No leaf spots detected. Plant looks good!");
+                        } else {
+                            statusLabel.setText("Status: ANOMALY DETECTED");
+                            statusLabel.setForeground(Color.RED);
+                            detailLabel.setText("Found " + count + " potential leaf spots. Please inspect.");
+                        }
+                    });
+                });
     }
 }
