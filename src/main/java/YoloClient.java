@@ -93,7 +93,7 @@ public class YoloClient {
         client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
                 .thenAccept(result -> {
-                    // This still prints to console so you can see the raw data
+                    // This still prints to console so can see the raw data
                     System.out.println("AI Result: " + result);
 
                     JSONObject json = new JSONObject(result);
