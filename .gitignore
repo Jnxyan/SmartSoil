@@ -1,0 +1,6 @@
+dataset/
+raw images/
+runs/
+*.pt
+__pycache__/
+*.pyc
