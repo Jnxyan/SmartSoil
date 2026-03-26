@@ -1,0 +1,14 @@
+const PLANTS = [
+  { id: "chili",    label: "Chili",      icon: "🌶️" },
+  { id: "mango",    label: "Mango",      icon: "🥭" },
+  { id: "paddy",    label: "Paddy",      icon: "🌾" },
+  { id: "tomato",   label: "Tomato",     icon: "🍅" },
+  { id: "banana",   label: "Banana",     icon: "🍌" },
+  { id: "durian",   label: "Durian",     icon: "🦔" },
+  { id: "rubber",   label: "Rubber",     icon: "🌳" },
+  { id: "papaya",   label: "Papaya",     icon: "🍈" },
+  { id: "corn",     label: "Corn",       icon: "🌽" },
+  { id: "other",    label: "Other…",     icon: "✏️" },
+];
+
+export { PLANTS };
