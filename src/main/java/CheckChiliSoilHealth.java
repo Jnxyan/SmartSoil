@@ -18,10 +18,14 @@ public class CheckChiliSoilHealth {
         public static String getUpcomingWeather(){
             try{
                 String apikey = "66b97819390a4bfbab465414260403";
-                String location = "Butterworth";
+                String location ;
 
-                java.net.URL url = new java.net.URL("http://api.weatherapi.com/v1/forecast.json?key=" + apikey
-                        + "&q=" + location + "&days=3");
+                if (location == null || location.isEmpty()) {
+                    location = "Butterworth"; // Fallback default
+                }
+                // use the 'location' in the URL string
+                java.net.URL url = new java.net.URL("...&q=" + location + "&days=3");
+
                 java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
                 conn.connect();
 
