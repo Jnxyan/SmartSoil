@@ -1,3 +1,5 @@
+package SmartSoil;
+
 public class Plant {
     //Data field
     String name;

@@ -1,5 +1,12 @@
+import org.springframework.web.bind.annotation.CrossOrigin;
+
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
+
+@CrossOrigin(origins = "http://localhost:5173")
 
 public class CheckChiliSoilHealth {
     public static class ChiliSoil{
@@ -18,18 +25,22 @@ public class CheckChiliSoilHealth {
         public static String getUpcomingWeather(){
             try{
                 String apikey = "66b97819390a4bfbab465414260403";
-                String location = "Butterworth";
+                String location = "";
 
-                java.net.URL url = new java.net.URL("http://api.weatherapi.com/v1/forecast.json?key=" + apikey
-                        + "&q=" + location + "&days=3");
-                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                if (location == null || location.isEmpty()) {
+                    location = "Butterworth"; // Fallback default
+                }
+                // use the 'location' in the URL string
+                URL url = new URL("...&q=" + location + "&days=3");
+
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.connect();
 
                 if(conn.getResponseCode() != 200){
                     return "Unknown";
                 }
 
-                java.util.Scanner apiScanner = new java.util.Scanner(url.openStream());
+                Scanner apiScanner = new Scanner(url.openStream());
                 StringBuilder response = new StringBuilder();
                 while (apiScanner.hasNext()){
                     response.append(apiScanner.nextLine());
