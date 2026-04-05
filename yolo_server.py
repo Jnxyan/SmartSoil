@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware 
 import uvicorn
 import cv2
 import numpy as np
