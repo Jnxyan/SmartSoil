@@ -3,38 +3,50 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import cv2
 import numpy as np
-from roboflow import Roboflow
 from ultralytics import YOLO
 
 app = FastAPI()
 
-# Connect to Roboflow
-#rf = Roboflow(api_key="dRXRP1wrcdRakhwlVXM0")
-#project = rf.workspace("xinhuis-workspace").project("chili-plant-zr1ck")
-#model = project.version(7).model
+# IMPORTANT: This allows your frontend (React/Vue/Plain JS) to talk to this Python server
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Load trained model
-model = YOLO("runs/detect/train/weights/best.pt")
+# Load the model globally so it's fast
+try:
+    model = YOLO("muhveran_chili_best.pt")
+    print("✅ Model Loaded Successfully!")
+    print(f"Classes found: {model.names}")
+except Exception as e:
+    print(f"❌ ERROR LOADING MODEL: {e}")
 
 @app.post("/predict")
 async def predict(request: Request):
     try:
+        # 1. Read the image bytes from the request
         contents = await request.body()
         nparr = np.frombuffer(contents, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
         if img is None:
-            return {"error": "Failed to decode image"}
+            return {"predictions": [], "error": "Invalid image format"}
 
-        # Run local inference
-        results = model(img, conf=0.6) # 0.6 is confidence threshold
+        # 2. Run Inference
+        # conf=0.1 is very low - perfect for a hackathon demo to ensure SOMETHING shows up
+        results = model(img, conf=0.1) 
         
         clean_predictions = []
+        
         for r in results:
-            for box in r.boxes:
-                # Get coordinates (x, y, w, h)
-                # .xywh[0] gives [center_x, center_y, width, height]
-                coords = box.xywh[0].tolist() 
+            # Sort by confidence so the most likely disease is at the top
+            boxes = sorted(r.boxes, key=lambda x: x.conf[0], reverse=True)
+            
+            for box in boxes:
+                coords = box.xywh[0].tolist() # [center_x, center_y, width, height]
                 
                 clean_predictions.append({
                     "class": model.names[int(box.cls[0])],
@@ -44,12 +56,15 @@ async def predict(request: Request):
                     "width": coords[2],
                     "height": coords[3]
                 })
-            
+        
+        # 3. Return the list of found diseases
         return {"predictions": clean_predictions}
 
     except Exception as e:
-        print(f"Server Error: {e}")
-        return {"error": str(e)}
+        print(f"🔥 SERVER ERROR: {e}")
+        return {"predictions": [], "error": str(e)}
 
 if __name__ == "__main__":
+    # Use port 8001 as per your frontend fetch request
+    print("🚀 Starting Chili Disease AI Server on http://localhost:8001")
     uvicorn.run(app, host="0.0.0.0", port=8001)

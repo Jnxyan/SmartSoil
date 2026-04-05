@@ -18,19 +18,40 @@ function App() {
     const [location, setLocation] = useLocalStorage("ss_geo", null);
     const [geoLoading, setGeoLoading] = useState(false);
   
-    const fetchLocation = useCallback(() => {
-      if (!navigator.geolocation) return;
-      setGeoLoading(true);
-      navigator.geolocation.getCurrentPosition(async pos => {
-        try {
-          const d = await getRegionData(pos.coords.latitude, pos.coords.longitude);
-          setLocation(d);
-        } catch {}
-        setGeoLoading(false);
-      }, () => setGeoLoading(false));
-    }, []);
+   const fetchLocation = useCallback(() => {
+  if (!navigator.geolocation) {
+    alert("Your browser does not support location.");
+    return;
+  }
   
-    useEffect(() => { if (!location) fetchLocation(); }, []);
+  setGeoLoading(true);
+  
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      // Success!
+      try {
+        const d = await getRegionData(pos.coords.latitude, pos.coords.longitude);
+        setLocation(d);
+        alert("Location updated to: " + d.region);
+      } catch (e) {
+        alert("Error getting region data: " + e.message);
+      }
+      setGeoLoading(false);
+    },
+    (error) => {
+      // Error handling with alerts
+      setGeoLoading(false);
+      if (error.code === 1) {
+        alert("PERMISSION_DENIED: Please click the 🔒 icon in your address bar and set Location to 'Allow'.");
+      } else if (error.code === 2) {
+        alert("POSITION_UNAVAILABLE: Your network or device can't find your GPS coordinates.");
+      } else if (error.code === 3) {
+        alert("TIMEOUT: It took too long to find you. Try again.");
+      }
+    },
+    { timeout: 10000, enableHighAccuracy: true }
+  );
+}, [setLocation]);
   
     return (
       <>
